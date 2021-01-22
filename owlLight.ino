@@ -5,10 +5,15 @@
 const int MAX_LIGHT_CYCLE = 9;
 const long CAPACITIVE_TRESHOLD = 20000;
 const int HOLD_DELAY = 500;
+const float COMMON_MATH_VARIABLE = 180/PI;
+const int PULSE_SPEED = 1;
+const int POWER = 255;
+const int LED_COUNT = 3
 
 //lamp status
 bool isLampOn = false;
 int lightCycle = 0;
+float x = 0; //value for the rainbowcycle between 0 and pi
 
 //capacitive touch global variable
 CapacitiveSensor cs_4_2 = CapacitiveSensor(4,2);
@@ -27,10 +32,9 @@ int[] leds = {11, 10, 9};
 float RGB[3][MAX_LIGHT_CYCLE];
 
 void setup(){
-    //Set led pins
-    int count = leds.size();
 
-    for (int i = 0; i < count; i++)
+    //Set led pins
+    for (int i = 0; i < LED_COUNT; i++)
     {
         pinMode(i, OUTPUT);
     }
@@ -39,7 +43,7 @@ void setup(){
     cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);
 
     //start LED off
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < LED_COUNT; i++)
     {
         digitalWrite(i, LOW);
     }
@@ -69,10 +73,30 @@ void loop(){
     {
         updateState(isPressed);
     }
+
+    isPressed_Old = isPressed;
     
     //turn LED off if isLampOn = false
-
+    if (!isLampOn)
+    {
+        for (int i = 0; i < LED_COUNT; i++)
+        {
+            digitalWrite(leds[i], LOW);
+        }
+        
+    }
+    
     //start rainbow cycle if cycle 0
+    if (lightCycle == 0)
+    {
+        rainbowCycle();
+    }
+    else if (lightCycle > 0 && lightCycle < MAX_LIGHT_CYCLE)
+    {
+        staticCycle(lightCycle);
+    }
+    
+    
 
     //start static cycle if not 0
 
@@ -93,6 +117,86 @@ void updateState(bool state){
         if (pressedTimer >= HOLD_DELAY)
         {
             isLampOn = !isLampOn;
+        }
+        else if (pressedTimer >= 5 && isLampOn)
+        {
+            
+            //increase the lightCycle
+            lightCycle++;
+
+            //if over limit of light cycle revert to 0
+            if (lightCycle >= MAX_LIGHT_CYCLE)
+            {
+                lightCycle = 0;
+            }
+            
+
+        }
+        
+        
+    }
+    
+}
+
+void rainbowCycle(){
+
+    //Cycle from 0 to pi
+    if (x >= PI)
+    {
+        x = 0;
+    }
+    else
+    {
+        x += 0.00001;
+    }
+    
+    //determine value for each LED
+    RGB[0][0] = POWER * abs(sin(x*(COMMON_MATH_VARIABLE)));             //RED LED
+    RGB[1][0] = POWER * abs(sin((x+PI/3)*(COMMON_MATH_VARIABLE)));      //GREEN LED
+    RGB[2][0] = POWER * abs(sin((x+(2*PI)/3)*(COMMON_MATH_VARIABLE)));  //BLUE LED
+
+    //change color of LEDS
+    if (isLampOn)
+    {
+
+        for (int i = 0; i < LED_COUNT; i++)
+        {
+            analogWrite(leds[i], RGB[i][0]);
+        }
+        
+    }
+
+    //calculate delay for each color
+    for (size_t i = 0; i < LED_COUNT; i++)
+    {
+        if (RGB[i][0] < 1)
+        {
+            delay(20 * PULSE_SPEED);
+        }
+        else if (RGB[i][0] < 5)
+        {
+            delay(10 * PULSE_SPEED);
+        }
+        else if (RGB[i][0] < 10)
+        {
+            delay(2 * PULSE_SPEED);
+        }
+        else if (RGB[i][0] < 100)
+        {
+            delay(1 * PULSE_SPEED);
+        }
+    }
+    
+    delay(1);
+
+}
+
+void staticCycle(int cycleNumber){
+    if (isLampOn)
+    {
+        for (int i = 0; i < LED_COUNT; i++)
+        {
+            analogWrite(leds[i], RGB[i][cycleNumber]);
         }
         
     }
