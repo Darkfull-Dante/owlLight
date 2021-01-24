@@ -8,7 +8,7 @@ const int HOLD_DELAY = 500;
 const float COMMON_MATH_VARIABLE = 180/PI;
 const int PULSE_SPEED = 1;
 const int POWER = 255;
-const int LED_COUNT = 3
+const int LED_COUNT = 3;
 
 //lamp status
 bool isLampOn = false;
@@ -26,7 +26,7 @@ int startPressed = 0;
 int endPressed = 0;
 
 //LED pins
-int[] leds = {11, 10, 9};
+int leds[] = {11, 10, 9};
 
 //RGB color index
 float RGB[3][MAX_LIGHT_CYCLE];
@@ -39,6 +39,8 @@ void setup(){
         pinMode(i, OUTPUT);
     }
 
+    Serial.begin(9600);
+
     //set capacitive touch
     cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);
 
@@ -48,7 +50,6 @@ void setup(){
         digitalWrite(i, LOW);
     }
     
-
     //create RGB color code value
     RGB[0][1] = 255;    RGB[1][1] = 0;      RGB[2][1] = 0;      //red
     RGB[0][2] = 255;    RGB[1][2] = 36;     RGB[2][2] = 0;      //orange
@@ -58,7 +59,6 @@ void setup(){
     RGB[0][6] = 128;    RGB[1][6] = 0;      RGB[2][6] = 255;    //purple
     RGB[0][7] = 255;    RGB[1][7] = 0;      RGB[2][7] = 128;    //pink
     RGB[0][8] = 255;    RGB[1][8] = 255;    RGB[2][8] = 255;    //white
-    
 }
 
 void loop(){
@@ -95,11 +95,6 @@ void loop(){
     {
         staticCycle(lightCycle);
     }
-    
-    
-
-    //start static cycle if not 0
-
 }
 
 void updateState(bool state){
@@ -129,13 +124,8 @@ void updateState(bool state){
             {
                 lightCycle = 0;
             }
-            
-
-        }
-        
-        
+        }   
     }
-    
 }
 
 void rainbowCycle(){
@@ -198,7 +188,6 @@ void staticCycle(int cycleNumber){
         {
             analogWrite(leds[i], RGB[i][cycleNumber]);
         }
-        
     }
     
 }
