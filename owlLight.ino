@@ -3,8 +3,8 @@
 
 //Constants
 const int MAX_LIGHT_CYCLE = 9;
-const long CAPACITIVE_TRESHOLD = 20000;
-const int HOLD_DELAY = 500;
+const long CAPACITIVE_TRESHOLD = 10000;
+const int HOLD_DELAY = 750;
 const float COMMON_MATH_VARIABLE = 180/PI;
 const int PULSE_SPEED = 1;
 const int POWER = 255;
@@ -27,6 +27,7 @@ int endPressed = 0;
 
 //LED pins
 int leds[] = {11, 10, 9};
+int checkLight = 12;
 
 //RGB color index
 float RGB[3][MAX_LIGHT_CYCLE];
@@ -38,6 +39,8 @@ void setup(){
     {
         pinMode(i, OUTPUT);
     }
+    
+    pinMode(checkLight, OUTPUT);
 
     Serial.begin(9600);
 
@@ -64,10 +67,19 @@ void setup(){
 void loop(){
 
     //read the value of the capacitive button
+    
     long capacitiveTouchValue = cs_4_2.capacitiveSensor(10);
+    //Serial.print("C=");
+    //Serial.println(capacitiveTouchValue);
+    //isPressed = digitalRead(button) == HIGH;
 
     //determine if button is pressed or not based on capacitance value
-    isPressed = capacitiveTouchValue > CAPACITIVE_TRESHOLD;
+    if (isPressed = capacitiveTouchValue < CAPACITIVE_TRESHOLD){ //use lower than when not on a propelly grounded system, higher than if properly grounded
+        digitalWrite(checkLight, HIGH);
+    }
+    else{
+        digitalWrite(checkLight, LOW);
+    }
 
     if (isPressed != isPressed_Old)
     {
@@ -84,17 +96,23 @@ void loop(){
             digitalWrite(leds[i], LOW);
         }
         
+        
+    }
+    else
+    {
+        if (lightCycle == 0)
+        {
+            rainbowCycle();
+        }
+        else if (lightCycle > 0 && lightCycle < MAX_LIGHT_CYCLE)
+        {
+            staticCycle(lightCycle);
+        }
     }
     
     //start rainbow cycle if cycle 0
-    if (lightCycle == 0)
-    {
-        rainbowCycle();
-    }
-    else if (lightCycle > 0 && lightCycle < MAX_LIGHT_CYCLE)
-    {
-        staticCycle(lightCycle);
-    }
+    
+    
 }
 
 void updateState(bool state){
@@ -108,6 +126,7 @@ void updateState(bool state){
         //calculate pressed time
         endPressed = millis();
         pressedTimer = endPressed - startPressed;
+        Serial.println(pressedTimer);
 
         if (pressedTimer >= HOLD_DELAY)
         {
@@ -145,6 +164,15 @@ void rainbowCycle(){
     RGB[1][0] = POWER * abs(sin((x+PI/3)*(COMMON_MATH_VARIABLE)));      //GREEN LED
     RGB[2][0] = POWER * abs(sin((x+(2*PI)/3)*(COMMON_MATH_VARIABLE)));  //BLUE LED
 
+    /*
+    Serial.print("R=");
+    Serial.print(RGB[0][0]);
+    Serial.print(", G=");
+    Serial.print(RGB[1][0]);
+    Serial.print(", B=");
+    Serial.println(RGB[2][0]);
+    */
+
     //change color of LEDS
     if (isLampOn)
     {
@@ -157,7 +185,7 @@ void rainbowCycle(){
     }
 
     //calculate delay for each color
-    for (size_t i = 0; i < LED_COUNT; i++)
+    for (int i = 0; i < LED_COUNT; i++)
     {
         if (RGB[i][0] < 1)
         {
